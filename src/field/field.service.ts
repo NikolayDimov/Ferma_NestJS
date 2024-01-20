@@ -153,19 +153,30 @@ export class FieldService {
     // console.log("Received ID:", id);
     const field = await this.fieldRepository.findOne({
       where: { id },
-      relations: ["soil"],
+      relations: ["soil", "growingCropPeriods"],
     });
+
+    if (!field) {
+      throw new NotFoundException(`Field with ID ${id} not found`);
+    }
+
+    // Check if the field is associated with any GrowingCropPeriods
+    if (field.growingCropPeriods && field.growingCropPeriods.length > 0) {
+      throw new BadRequestException(
+        `This field ${field.name} has associated GrowingCropPeriods. Cannot update the farm.`,
+      );
+    }
 
     if (updateFieldDto.soilId) {
       let newSoil = await this.soilService.findOne(updateFieldDto.soilId);
 
-      if (!newSoil) {
-        newSoil = await this.soilService.createSoil({
-          name: updateFieldDto.soilId,
-        });
-      }
-
       field.soil = newSoil;
+    }
+
+    if (updateFieldDto.farmId) {
+      let newFarm = await this.farmService.findOne(updateFieldDto.farmId);
+
+      field.farm = newFarm;
     }
 
     if (updateFieldDto.name) {
@@ -185,10 +196,22 @@ export class FieldService {
   async deleteFieldById(
     id: string,
   ): Promise<{ id: string; name: string; message: string }> {
-    const existingField = await this.fieldRepository.findOneBy({ id });
+    const existingField = await this.fieldRepository.findOne({
+      where: { id },
+      relations: ["soil", "growingCropPeriods"],
+    });
 
     if (!existingField) {
       throw new NotFoundException(`Field with id ${id} not found`);
+    }
+
+    if (
+      existingField.growingCropPeriods &&
+      existingField.growingCropPeriods.length > 0
+    ) {
+      throw new BadRequestException(
+        `This field ${existingField.name} has associated growingCropPeriods. Cannot be soft deleted.`,
+      );
     }
 
     // Soft delete using the softDelete method
@@ -205,10 +228,22 @@ export class FieldService {
     id: string,
     userRole: UserRole,
   ): Promise<{ id: string; name: string; message: string }> {
-    const existingField = await this.fieldRepository.findOneBy({ id });
+    const existingField = await this.fieldRepository.findOne({
+      where: { id },
+      relations: ["soil", "growingCropPeriods"],
+    });
 
     if (!existingField) {
       throw new NotFoundException(`Field with id ${id} not found`);
+    }
+
+    if (
+      existingField.growingCropPeriods &&
+      existingField.growingCropPeriods.length > 0
+    ) {
+      throw new BadRequestException(
+        `This field ${existingField.name} has associated growingCropPeriods. Cannot be permanent deleted.`,
+      );
     }
 
     // Check if the user has the necessary role (OWNER) to perform the permanent delete

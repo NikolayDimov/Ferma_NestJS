@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -24,6 +25,24 @@ export class CropService {
     }
 
     const { name } = createCropDto;
+
+    // Attempt to find the crop by name (including soft-deleted ones)
+    const existingCrop = await this.cropRepository.findOne({
+      withDeleted: true,
+      where: { name },
+    });
+
+    if (existingCrop) {
+      // If the crop exists and is soft-deleted, restore it
+      if (existingCrop.deleted) {
+        existingCrop.deleted = null;
+        return await this.cropRepository.save(existingCrop);
+      } else {
+        // If the crop is not soft-deleted, throw a conflict exception
+        throw new ConflictException(`Crop ${name} already exists`);
+      }
+    }
+
     const newCrop = this.cropRepository.create({ name });
     return await this.cropRepository.save(newCrop);
   }
@@ -82,7 +101,7 @@ export class CropService {
   ): Promise<{ id: string; name: string; message: string }> {
     const existingCrop = await this.cropRepository.findOne({
       where: { id },
-      relations: ["growingPeriods"],
+      relations: ["growingCropPeriods"],
     });
 
     if (!existingCrop) {
@@ -94,7 +113,7 @@ export class CropService {
       existingCrop.growingCropPeriods.length > 0
     ) {
       throw new BadRequestException(
-        "This crop has associated growingPeriods. Cannot be soft deleted.",
+        "This crop has associated growingCropPeriods. Cannot be soft deleted.",
       );
     }
 
@@ -114,7 +133,7 @@ export class CropService {
   ): Promise<{ id: string; name: string; message: string }> {
     const existingCrop = await this.cropRepository.findOne({
       where: { id },
-      relations: ["growingPeriods"],
+      relations: ["growingCropPeriods"],
     });
 
     if (!existingCrop) {
@@ -126,7 +145,7 @@ export class CropService {
       existingCrop.growingCropPeriods.length > 0
     ) {
       throw new BadRequestException(
-        "This crop has associated growingPeriods. Cannot be soft deleted.",
+        "This crop has associated growingCropPeriods. Cannot be soft deleted.",
       );
     }
 

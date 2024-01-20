@@ -17,7 +17,7 @@ export class Farm {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column()
+  @Column({ unique: true, nullable: false })
   name: string;
 
   @Column({

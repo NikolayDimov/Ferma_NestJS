@@ -23,7 +23,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signUp(user: CreateUserDto): Promise<UserResponseDto> {
+  async register(user: CreateUserDto): Promise<UserResponseDto> {
     const users = await this.usersService.find(user.email);
 
     if (users.length) {
@@ -54,7 +54,7 @@ export class AuthService {
     }
   }
 
-  async signIn(userLog: SignInDto) {
+  async login(userLog: SignInDto) {
     try {
       const { email, password } = userLog;
       const existingUser = await this.usersService.findOne(email);

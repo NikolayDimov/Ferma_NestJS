@@ -14,7 +14,7 @@ export class Crop {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ nullable: false })
+  @Column({ unique: true, nullable: false })
   name: string;
 
   @OneToMany(

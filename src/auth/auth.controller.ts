@@ -21,15 +21,15 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @Post("login")
+  @Post("/login")
   signIn(@Body() signInDto: SignInDto) {
-    return this.authService.signIn(signInDto);
+    return this.authService.login(signInDto);
   }
 
   @Public()
   @Post("/register")
   async createUser(@Body() user: CreateUserDto) {
-    const userCreate = await this.authService.signUp(user);
+    const userCreate = await this.authService.register(user);
     return userCreate;
   }
 

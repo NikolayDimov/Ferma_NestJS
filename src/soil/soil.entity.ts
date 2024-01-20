@@ -14,7 +14,7 @@ export class Soil {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column()
+  @Column({ unique: true, nullable: false })
   name: string;
 
   @OneToMany(() => Field, (field) => field.soil)

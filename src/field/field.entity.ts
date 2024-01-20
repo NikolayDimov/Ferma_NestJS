@@ -19,7 +19,7 @@ export class Field {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column()
+  @Column({ unique: true, nullable: false })
   name: string;
 
   @Column({ type: "jsonb", nullable: false })
@@ -42,7 +42,7 @@ export class Field {
   // @JoinColumn({ name: "soil_id" })
   // soil: Field;
 
-  // When get all fields wants growingPeriods
+  // When get all fields wants growingCropPeriods
   @OneToMany(
     () => GrowingCropPeriod,
     (growingCropPeriod) => growingCropPeriod.field,

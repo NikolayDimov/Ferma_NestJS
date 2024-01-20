@@ -183,7 +183,7 @@ export class FarmService {
     const fieldsPerFarmAndCrop = await this.farmRepository
       .createQueryBuilder("farm")
       .leftJoin("farm.fields", "field")
-      .leftJoin("field.growingPeriods", "growingPeriod")
+      .leftJoin("field.growingCropPeriods", "growingCropPeriod")
       .leftJoin("growingPeriod.crop", "crop")
       .select([
         "farm.name AS farmName",

@@ -22,12 +22,12 @@ export class CropController {
   constructor(private readonly cropService: CropService) {}
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("/createCrop")
+  @Post("")
   async createCrop(@Body() createCropDto: CreateCropDto) {
     return this.cropService.createCrop(createCropDto);
   }
 
-  @Get("getAll")
+  @Get("")
   async getAllCrops() {
     return this.cropService.findAll();
   }

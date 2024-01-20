@@ -23,12 +23,12 @@ export class SoilController {
   constructor(private soilService: SoilService) {}
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("/createSoil")
+  @Post("")
   async createSoil(@Body() createSoilDto: CreateSoilDto) {
     return this.soilService.createSoil(createSoilDto);
   }
 
-  @Get("getAll")
+  @Get("")
   async getAllSoils() {
     const soils = await this.soilService.findAll();
     return { data: soils };

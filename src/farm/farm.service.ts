@@ -70,8 +70,12 @@ export class FarmService {
   }
 
   async findOneById(id: string): Promise<Farm> {
-    const farm = await this.farmRepository.findOne({ where: { id } });
-    return farm;
+    //const existingFarm = await this.farmRepository.findOne({ where: { id } });
+    const existingFarm = await this.farmRepository.findOneBy({ id });
+    if (!existingFarm) {
+      throw new NotFoundException(`Farm with ID ${id} not found`);
+    }
+    return existingFarm;
   }
 
   // transformFarm and transformCountry -- use for findAllWithCountries and findById

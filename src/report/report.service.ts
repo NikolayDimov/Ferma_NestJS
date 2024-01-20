@@ -8,7 +8,7 @@ import { GrowingCropPeriodService } from "../growing-crop-period/growing-crop-pe
 export class ReportService {
   constructor(
     private readonly farmService: FarmService,
-    private readonly cultivationService: ProcessingService,
+    private readonly processingService: ProcessingService,
     private readonly fieldService: FieldService,
     private readonly growingCropPeriodService: GrowingCropPeriodService,
   ) {}
@@ -27,7 +27,7 @@ export class ReportService {
 
   async getMostCommonSoilTypePerFarm() {
     const result =
-      await this.cultivationService.getMostCommonFieldSoilTypePerFarm();
+      await this.processingService.getMostCommonFieldSoilTypePerFarm();
 
     return result.map((report) => ({
       farmName: report.farmName,
@@ -39,7 +39,7 @@ export class ReportService {
 
   async generateCultivationReport(): Promise<ProcessingReportDTO[]> {
     try {
-      return await this.cultivationService.generateCultivationReport();
+      return await this.processingService.generateCultivationReport();
     } catch (error) {
       console.error("Error generating cultivation report:", error);
       throw new Error("Failed to generate cultivation report");

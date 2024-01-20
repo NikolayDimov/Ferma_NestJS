@@ -78,7 +78,7 @@ export class GrowingCropPeriodService {
     const existingGrowingPeriod =
       await this.growingCropPeriodRepository.findOne({
         where: { id },
-        relations: ["cultivations"],
+        relations: ["processing"],
       });
 
     if (!existingGrowingPeriod) {
@@ -90,7 +90,7 @@ export class GrowingCropPeriodService {
       existingGrowingPeriod.processings.length > 0
     ) {
       throw new BadRequestException(
-        "This machine has associated cultivations. Cannot be soft deleted.",
+        "This machine has associated processing. Cannot be soft deleted.",
       );
     }
 

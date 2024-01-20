@@ -81,11 +81,9 @@ export class MachineService {
     //   where: { id },
     // });
     const existingMachine = await this.machineRepository.findOneBy({ id });
-
     if (!existingMachine) {
       throw new NotFoundException(`Machine with ID ${id} not found`);
     }
-
     return existingMachine;
   }
 
@@ -131,7 +129,7 @@ export class MachineService {
     return machine;
   }
 
-  // Transfer machine guard to another farm, if machine participate in cultivation
+  // Update machine with Transfer machine guard to another farm, if machine participate in cultivation
   // Work, and also can update machine brand, model, reg number
   async updateMachine(
     id: string,
@@ -140,18 +138,18 @@ export class MachineService {
     // Fetch the existing machine with associated data
     const machine = await this.machineRepository.findOne({
       where: { id },
-      relations: ["cultivations", "farm"],
+      relations: ["processings", "farm"],
     });
 
-    // Check if there are associated cultivations
+    // Check if there are associated processing
     if (machine.processings && machine.processings.length > 0) {
-      // If there are associated cultivations, prevent changing the farmId
+      // If there are associated processing, prevent changing the farmId
       if (
         updateMachineDto.farmId &&
         updateMachineDto.farmId !== machine.farm.id
       ) {
         throw new BadRequestException(
-          "This machine has associated cultivations. Cannot update the farm.",
+          "This machine has associated processing. Cannot update the farm.",
         );
       }
     }
@@ -184,58 +182,36 @@ export class MachineService {
     return await this.machineRepository.save(machine);
   }
 
-  // Transfer machine guard to another farm, if machine participate in cultivation
-  // Work, but also can't update machine brand, model, reg number
+  // Tarnsferring machine from one Farm to another
+  async transferMachine(id: string, newFarmId: string): Promise<Machine> {
+    // Fetch the existing machine with associated data
+    const existingMachine = await this.machineRepository.findOne({
+      where: { id },
+      relations: ["processings", "farm"],
+    });
 
-  // async updateMachine(
-  //   id: string,
-  //   updateMachineDto: UpdateMachineDto,
-  // ): Promise<Machine> {
-  //   const machine = await this.machineRepository.findOne({
-  //     where: { id },
-  //     relations: ["cultivations", "farm"],
-  //   });
+    if (!existingMachine) {
+      throw new NotFoundException(`Machine with id ${id} not found`);
+    }
 
-  //   if (!machine) {
-  //     throw new NotFoundException(`Machine with ID ${id} not found`);
-  //   }
+    if (existingMachine.processings && existingMachine.processings.length > 0) {
+      throw new BadRequestException(
+        "This machine has associated processing. Cannot be soft deleted.",
+      );
+    }
 
-  //   if (machine.cultivations && machine.cultivations.length > 0) {
-  //     throw new BadRequestException(
-  //       "This machine has associated cultivations. Cannot update the farm.",
-  //     );
-  //   }
+    // Validate and update the farm
+    const newFarm = await this.farmService.findOne(newFarmId);
 
-  //   if (updateMachineDto.farmId) {
-  //     const farm = await this.farmService.findOne(updateMachineDto.farmId);
+    if (!newFarm) {
+      throw new BadRequestException("No farm found with the provided farmId");
+    }
 
-  //     if (!farm) {
-  //       throw new BadRequestException("No farm found with the provided farmId");
-  //     }
+    existingMachine.farm = newFarm;
 
-  //     machine.farm = farm;
-  //   }
-
-  //   if (
-  //     updateMachineDto.brand ||
-  //     updateMachineDto.model ||
-  //     updateMachineDto.registerNumber
-  //   ) {
-  //     if (updateMachineDto.brand) {
-  //       machine.brand = updateMachineDto.brand;
-  //     }
-
-  //     if (updateMachineDto.model) {
-  //       machine.model = updateMachineDto.model;
-  //     }
-
-  //     if (updateMachineDto.registerNumber) {
-  //       machine.registerNumber = updateMachineDto.registerNumber;
-  //     }
-  //   }
-
-  //   return await this.machineRepository.save(machine);
-  // }
+    // Save and return the updated machine
+    return await this.machineRepository.save(existingMachine);
+  }
 
   async deleteMachineById(id: string): Promise<{
     id: string;
@@ -246,7 +222,7 @@ export class MachineService {
   }> {
     const existingMachine = await this.machineRepository.findOne({
       where: { id },
-      relations: ["cultivations"],
+      relations: ["processings"],
     });
 
     if (!existingMachine) {
@@ -255,7 +231,7 @@ export class MachineService {
 
     if (existingMachine.processings && existingMachine.processings.length > 0) {
       throw new BadRequestException(
-        "This machine has associated cultivations. Cannot be soft deleted.",
+        "This machine has associated processing. Cannot be soft deleted.",
       );
     }
 
@@ -267,7 +243,7 @@ export class MachineService {
       brand: existingMachine.brand,
       model: existingMachine.model,
       registerNumber: existingMachine.registerNumber,
-      message: `Successfully permanently deleted Machine with id ${id}, Brand ${existingMachine.brand}, Model ${existingMachine.model} and Register Number ${existingMachine.registerNumber}`,
+      message: `Successfully soft deleted Machine with id ${id}, Brand ${existingMachine.brand}, Model ${existingMachine.model} and Register Number ${existingMachine.registerNumber}`,
     };
   }
 
@@ -283,7 +259,7 @@ export class MachineService {
   }> {
     const existingMachine = await this.machineRepository.findOne({
       where: { id },
-      relations: ["cultivations"],
+      relations: ["processings"],
     });
     // console.log("Found machine:", existingMachine);
 
@@ -295,10 +271,10 @@ export class MachineService {
     if (userRole !== UserRole.OWNER) {
       throw new NotFoundException("User does not have the required role");
     }
-    // Check if there are associated cultivations
+    // Check if there are associated processing
     if (existingMachine.processings && existingMachine.processings.length > 0) {
       throw new BadRequestException(
-        "This machine has associated cultivations. Cannot be permanently deleted.",
+        "This machine has associated processing. Cannot be permanently deleted.",
       );
     }
 

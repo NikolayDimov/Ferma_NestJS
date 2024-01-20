@@ -16,6 +16,7 @@ import { UpdateMachineDto } from "./dtos/update-machine.dto";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorator/roles.decorator";
 import { UserRole } from "../auth/dtos/role.enum";
+import { Machine } from "./machine.entity";
 
 @Controller("machine")
 @UseGuards(RolesGuard)
@@ -36,7 +37,7 @@ export class MachineController {
 
   @Get(":id")
   async getMachineById(@Param("id", ParseUUIDPipe) id: string) {
-    const machine = await this.machineService.findById(id);
+    const machine = await this.machineService.findOneById(id);
     if (!machine) {
       throw new NotFoundException("Machine not found");
     }
@@ -51,6 +52,15 @@ export class MachineController {
     @Body() updateMachineDto: UpdateMachineDto,
   ) {
     return this.machineService.updateMachine(id, updateMachineDto);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.OPERATOR)
+  @Patch(":id/transfer")
+  async transferMachine(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body("newFarmId", ParseUUIDPipe) newFarmId: string,
+  ): Promise<Machine> {
+    return this.machineService.transferMachine(id, newFarmId);
   }
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)

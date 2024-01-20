@@ -23,13 +23,13 @@ export class FieldController {
   constructor(private fieldService: FieldService) {}
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("createField")
+  @Post("")
   async createFieldWithSoilId(@Body() createFieldDto: CreateFieldDto) {
     const createdField = await this.fieldService.createField(createFieldDto);
     return { data: createdField };
   }
 
-  @Get("getAll")
+  @Get("")
   async getAllFields() {
     const transformedFields = await this.fieldService.findAllFields();
     return { data: transformedFields };

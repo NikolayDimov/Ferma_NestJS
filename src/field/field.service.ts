@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -7,6 +8,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Field } from "./field.entity";
 import { Soil } from "../soil/soil.entity";
+import { Farm } from "../farm/farm.entity";
 import { UserRole } from "../auth/dtos/role.enum";
 import { SoilService } from "../soil/soil.service";
 import { FarmService } from "../farm/farm.service";
@@ -24,15 +26,45 @@ export class FieldService {
   async createField(createFieldDto: CreateFieldDto): Promise<Field> {
     const { name, boundary, soilId, farmId } = createFieldDto;
 
+    // Check if the field name is unique within the specific farm
+    const existingField = await this.fieldRepository.findOne({
+      withDeleted: true,
+      where: { name, farm: { id: farmId } },
+    });
+
+    if (existingField) {
+      // If the field exists and is soft-deleted, restore it
+      if (existingField.deleted) {
+        existingField.deleted = null;
+        return await this.fieldRepository.save(existingField);
+      } else {
+        // Fetch the farm details
+        const farm = await this.farmService.findOneById(farmId);
+
+        // Create a separate variable for the error message
+        const errorMessage = `Field with name: '${name}' already exists in farm: '${farm ? farm.name : "Unknown farm"}'`;
+
+        // If the field is not soft-deleted, throw a conflict exception with the error message
+        throw new ConflictException(errorMessage);
+      }
+    }
+
+    let farm: Farm;
+
+    const existingFieldInOtherFarms = await this.fieldRepository.findOne({
+      withDeleted: true,
+      where: { name },
+    });
+
     // Check if the soil exists
     const soil = await this.soilService.findOne(soilId);
 
     // If the soil doesn't exist, create it
     if (!soil) {
-      throw new BadRequestException(`No soil found with ID: ${soilId}`);
+      throw new BadRequestException(`No soil found`);
     }
 
-    const farm = await this.farmService.findOneById(farmId);
+    farm = await this.farmService.findOneById(farmId);
     if (!farm) {
       throw new BadRequestException(`No farm with ${farm.id}`);
     }

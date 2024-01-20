@@ -19,7 +19,7 @@ export class Field {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ unique: true, nullable: false })
+  @Column({ nullable: false })
   name: string;
 
   @Column({ type: "jsonb", nullable: false })

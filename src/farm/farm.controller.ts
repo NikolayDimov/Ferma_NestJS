@@ -22,7 +22,7 @@ export class FarmController {
   constructor(private farmService: FarmService) {}
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("createFarm")
+  @Post("")
   async createFarm(@Body() createFarmDto: CreateFarmDto) {
     console.log("Received request payload:", createFarmDto);
 
@@ -30,7 +30,7 @@ export class FarmController {
     return { data: createdFarm };
   }
 
-  @Get("getAll")
+  @Get("")
   async getAllFarms() {
     const transformedFarms = await this.farmService.findAllFarms();
     return { data: transformedFarms };
@@ -38,7 +38,7 @@ export class FarmController {
 
   @Get(":id")
   async getFarmById(@Param("id", ParseUUIDPipe) id: string) {
-    const transformedFarm = await this.farmService.findById(id);
+    const transformedFarm = await this.farmService.findOneById(id);
     return { data: transformedFarm };
   }
 

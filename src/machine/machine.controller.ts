@@ -23,12 +23,12 @@ export class MachineController {
   constructor(private machineService: MachineService) {}
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("/createMachine")
+  @Post("")
   async createMachine(@Body() createMachineDto: CreateMachineDto) {
     return this.machineService.createMachine(createMachineDto);
   }
 
-  @Get("getAll")
+  @Get("")
   async getAllMachines() {
     const machines = await this.machineService.findAll();
     return { data: machines };

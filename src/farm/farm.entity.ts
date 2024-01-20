@@ -20,10 +20,11 @@ export class Farm {
   @Column({ unique: true, nullable: false })
   name: string;
 
-  @Column({
-    type: "point",
-  })
-  location: string;
+  // @Column({ type: "point" })
+  // location: string;
+
+  @Column({ type: "jsonb", nullable: false })
+  location: { type: string; coordinates: number[] };
 
   @OneToMany(() => Machine, (machine) => machine.farm)
   machines: Machine[];

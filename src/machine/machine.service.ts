@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -11,6 +12,7 @@ import { CreateMachineDto } from "./dtos/create-machine.dto";
 import { UpdateMachineDto } from "./dtos/update-machine.dto";
 import { UserRole } from "../auth/dtos/role.enum";
 import { FarmService } from "../farm/farm.service";
+import { validate } from "class-validator";
 
 @Injectable()
 export class MachineService {
@@ -20,7 +22,31 @@ export class MachineService {
   ) {}
 
   async createMachine(createMachineDto: CreateMachineDto): Promise<Machine> {
+    const errors = await validate(createMachineDto);
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
+    }
+
     const { brand, model, registerNumber, farmId } = createMachineDto;
+
+    // Attempt to find the soil by name (including soft-deleted ones)
+    const existingSoil = await this.machineRepository.findOne({
+      withDeleted: true,
+      where: { brand, model, registerNumber },
+    });
+
+    if (existingSoil) {
+      // If the soil exists and is soft-deleted, restore it
+      if (existingSoil.deleted) {
+        existingSoil.deleted = null;
+        return await this.machineRepository.save(existingSoil);
+      } else {
+        // If the soil is not soft-deleted, throw a conflict exception
+        throw new ConflictException(
+          `Machine with ${registerNumber} already exists`,
+        );
+      }
+    }
 
     const farm = await this.farmService.findOne(farmId);
 

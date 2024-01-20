@@ -17,13 +17,13 @@ export class Machine {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column()
+  @Column({ nullable: false })
   brand: string;
 
-  @Column()
+  @Column({ nullable: false })
   model: string;
 
-  @Column({ name: "register_number" })
+  @Column({ name: "register_number", unique: true, nullable: false })
   registerNumber: string;
 
   @ManyToOne(() => Farm, (farm) => farm.machines, { nullable: false })

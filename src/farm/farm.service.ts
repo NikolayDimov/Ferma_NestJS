@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Farm } from "./farm.entity";
@@ -24,17 +28,31 @@ export class FarmService {
       throw new Error("Invalid coordinates provided");
     }
 
-    const farm = new Farm();
-    farm.name = name;
+    // Attempt to find the farm by name (including soft-deleted ones)
+    const existingFarm = await this.farmRepository.findOne({
+      withDeleted: true,
+      where: { name },
+    });
 
-    // Create a GeoJSON Point object for the location
-    const locationObject = {
-      type: "Point",
-      coordinates: location.coordinates,
-    };
+    if (existingFarm) {
+      // If the farm exists and is soft-deleted, restore it
+      if (existingFarm.deleted) {
+        existingFarm.deleted = null;
+        return await this.farmRepository.save(existingFarm);
+      } else {
+        // If the farm is not soft-deleted, throw a conflict exception
+        throw new ConflictException(`Farm with name: ${name} already exists`);
+      }
+    }
 
-    // Serialize the GeoJSON Point to a JSON string
-    farm.location = JSON.stringify(locationObject);
+    // Create the farm entity with the correct location
+    const farm = this.farmRepository.create({
+      name,
+      location: {
+        type: "Point",
+        coordinates: location.coordinates,
+      },
+    });
 
     const createdFarm = await this.farmRepository.save(farm);
     return createdFarm;
@@ -61,10 +79,11 @@ export class FarmService {
     return {
       id: farm.id,
       name: farm.name,
+      location: farm.location,
+      fields: [],
       created: farm.created,
       updated: farm.updated,
-      deleted: farm.deleted,
-      fields: [],
+      deleted: farm.deleted, // we can remove some property and not shown in response
     };
   }
 
@@ -73,7 +92,7 @@ export class FarmService {
     return farms.map((farm) => this.transformFarm(farm));
   }
 
-  // async findAllWithCountries() {
+  // async findAllFarms() {
   //   const fields = await this.farmRepository
   //     .createQueryBuilder("farm")
   //     .where("farm.deleted IS NULL")
@@ -82,6 +101,7 @@ export class FarmService {
   //   return fields.map((farm) => this.transformFarm(farm));
   // }
 
+  // We can select what to be in the response
   async findById(id: string) {
     const farm = await this.farmRepository
       .createQueryBuilder("farm")

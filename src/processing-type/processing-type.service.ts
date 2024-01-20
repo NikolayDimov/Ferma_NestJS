@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -8,8 +9,8 @@ import { Repository } from "typeorm";
 import { ProcessingType } from "./processing-type.entity";
 import { validate } from "class-validator";
 import { CreateProcessingTypeDto } from "./dtos/create-processing-type.dto";
-// import { UpdateProcessingTypeDto } from "./dtos/update-Processing-type.dto";
-// import { ProcessingService } from "../Processing/Processing.service";
+import { UserRole } from "../auth/dtos/role.enum";
+import { UpdateProcessingTypeDto } from "./dtos/update-prcessing-type.dto";
 
 @Injectable()
 export class ProcessingTypeService {
@@ -29,15 +30,61 @@ export class ProcessingTypeService {
     }
 
     const { name } = createProcessingTypeDto;
+
+    // Attempt to find the processingType by name (including soft-deleted ones)
+    const existingProcessingType = await this.processingTypeRepository.findOne({
+      withDeleted: true,
+      where: { name },
+    });
+
+    if (existingProcessingType) {
+      // If the processingType exists and is soft-deleted, restore it
+      if (existingProcessingType.deleted) {
+        existingProcessingType.deleted = null;
+        return await this.processingTypeRepository.save(existingProcessingType);
+      } else {
+        // If the processingType is not soft-deleted, throw a conflict exception
+        throw new ConflictException(`Processing Type ${name} already exists`);
+      }
+    }
+
     const newProcessingType = this.processingTypeRepository.create({
       name,
     });
     return await this.processingTypeRepository.save(newProcessingType);
   }
 
+  async findAll(): Promise<ProcessingType[]> {
+    const processingType = await this.processingTypeRepository
+      .createQueryBuilder("processingType")
+      .andWhere("processingType.deleted IS NULL")
+      .getMany();
+
+    if (!processingType.length) {
+      throw new NotFoundException("No processingType found");
+    }
+
+    return processingType;
+  }
+
+  async findById(id: string): Promise<ProcessingType> {
+    const processingType = await this.processingTypeRepository
+      .createQueryBuilder("processingType")
+      .andWhere("processingType.id = :id", { id })
+      .andWhere("processingType.deleted IS NULL")
+      .getOne();
+
+    if (!processingType) {
+      throw new NotFoundException(`ProcessingType with ID ${id} not found`);
+    }
+
+    return processingType;
+  }
+
   async findOneByName(name: string): Promise<ProcessingType> {
     const ProcessingTypeName = await this.processingTypeRepository.findOne({
       where: { name },
+      relations: ["processings"],
     });
     return ProcessingTypeName;
   }
@@ -57,55 +104,34 @@ export class ProcessingTypeService {
   }
 
   // Better not update Processing-type
-  // async updateProcessingType(
-  //   id: string,
-  //   updateProcessingTypeDto: UpdateProcessingTypeDto,
-  // ): Promise<ProcessingType> {
-  //   const existingProcessingType =
-  //     await this.ProcessingTypeRepository.findOne({
-  //       where: { id },
-  //       relations: ["Processings"],
-  //     });
+  async updateProcessingType(
+    id: string,
+    updateProcessingTypeDto: UpdateProcessingTypeDto,
+  ): Promise<ProcessingType> {
+    const existingProcessingType = await this.processingTypeRepository.findOne({
+      where: { id },
+      relations: ["processings"],
+    });
 
-  //   if (
-  //     existingProcessingType.Processings &&
-  //     existingProcessingType.Processings.length > 0
-  //   ) {
-  //     // If there are associated Processings, prevent changing the ProcessingId
-  //     if (
-  //       updateProcessingTypeDto.ProcessingId &&
-  //       updateProcessingTypeDto.ProcessingId !==
-  //         existingProcessingType.Processings[0].id
-  //     ) {
-  //       throw new BadRequestException(
-  //         "This Processing type has associated Processings. Cannot update the ProcessingId.",
-  //       );
-  //     }
-  //   }
+    if (
+      existingProcessingType.processings &&
+      existingProcessingType.processings.length > 0
+    ) {
+      throw new BadRequestException(
+        `This Processing Type ${existingProcessingType.name} has associated Processings. Cannot update the Processing Type.`,
+      );
+    }
 
-  //   // Update other fields if provided
-  //   if (updateProcessingTypeDto.name !== undefined) {
-  //     existingProcessingType.name = updateProcessingTypeDto.name;
-  //   }
+    if (updateProcessingTypeDto.name) {
+      existingProcessingType.name = updateProcessingTypeDto.name;
+    }
 
-  //   // If the user provided a ProcessingId, validate and update the Processing
-  //   if (updateProcessingTypeDto.ProcessingId) {
-  //     const Processing = await this.ProcessingService.findOne(
-  //       updateProcessingTypeDto.ProcessingId,
-  //     );
+    const updatedProcessingType = await this.processingTypeRepository.save(
+      existingProcessingType,
+    );
 
-  //     if (!Processing) {
-  //       throw new BadRequestException(
-  //         "No Processing found with the provided ProcessingId",
-  //       );
-  //     }
-
-  //     existingProcessingType.Processings = [Processing]; // Assign as an array
-  //   }
-
-  //   // Save and return the updated Processing type
-  //   return await this.ProcessingTypeRepository.save(existingProcessingType);
-  // }
+    return updatedProcessingType;
+  }
 
   async deleteProcessingTypeById(id: string): Promise<{
     id: string;
@@ -114,11 +140,11 @@ export class ProcessingTypeService {
   }> {
     const existingProcessingType = await this.processingTypeRepository.findOne({
       where: { id },
-      relations: ["Processings"],
+      relations: ["processings"],
     });
 
     if (!existingProcessingType) {
-      throw new NotFoundException(`Machine with id ${id} not found`);
+      throw new NotFoundException(`Processing Type with id ${id} not found`);
     }
 
     if (
@@ -126,7 +152,7 @@ export class ProcessingTypeService {
       existingProcessingType.processings.length > 0
     ) {
       throw new BadRequestException(
-        "This Processing Type has associated Processings. Cannot be soft deleted.",
+        `This Processing Type ${existingProcessingType.name} has associated Processings. Cannot be soft deleted.`,
       );
     }
 
@@ -136,7 +162,44 @@ export class ProcessingTypeService {
     return {
       id,
       name: existingProcessingType.name,
-      message: `Successfully permanently deleted Processing type with id ${id}, name ${existingProcessingType.name}`,
+      message: `Successfully permanently deleted Processing Type with id ${id}, name ${existingProcessingType.name}`,
+    };
+  }
+
+  async permanentlyDeleteProcessingTypeForOwner(
+    id: string,
+    userRole: UserRole,
+  ): Promise<{ id: string; name: string; message: string }> {
+    const existingProcessingType = await this.processingTypeRepository.findOne({
+      where: { id },
+      relations: ["processings"],
+    });
+
+    if (!existingProcessingType) {
+      throw new NotFoundException(`Processing Type with id ${id} not found`);
+    }
+
+    if (
+      existingProcessingType.processings &&
+      existingProcessingType.processings.length > 0
+    ) {
+      throw new BadRequestException(
+        `This Processing Type ${existingProcessingType.name} has associated Processings. Cannot be permanent deleted.`,
+      );
+    }
+
+    // Check if the user has the necessary role (OWNER) to perform the permanent delete
+    if (userRole !== UserRole.OWNER) {
+      throw new NotFoundException("User does not have the required role");
+    }
+
+    // Perform the permanent delete
+    await this.processingTypeRepository.remove(existingProcessingType);
+
+    return {
+      id,
+      name: existingProcessingType.name,
+      message: `Successfully permanently deleted Processing Type with id ${id}, name ${existingProcessingType.name}`,
     };
   }
 }

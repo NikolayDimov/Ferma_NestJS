@@ -69,6 +69,9 @@ export class CropService {
 
   async findOne(id: string): Promise<Crop> {
     const existingCropId = await this.cropRepository.findOneBy({ id });
+    if (!existingCropId) {
+      throw new NotFoundException(`Crop with ID ${id} not found`);
+    }
     return existingCropId;
   }
 

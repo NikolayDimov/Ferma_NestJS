@@ -93,6 +93,9 @@ export class FarmService {
 
   async findAllFarms() {
     const farms = await this.farmRepository.find({});
+    if (!farms) {
+      throw new NotFoundException(`No farms found`);
+    }
     return farms.map((farm) => this.transformFarm(farm));
   }
 

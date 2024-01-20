@@ -151,46 +151,49 @@ export class FieldService {
     updateFieldDto: UpdateFieldDto,
   ): Promise<Field> {
     // console.log("Received ID:", id);
-    const field = await this.fieldRepository.findOne({
+    const existingField = await this.fieldRepository.findOne({
       where: { id },
       relations: ["soil", "growingCropPeriods"],
     });
 
-    if (!field) {
+    if (!existingField) {
       throw new NotFoundException(`Field with ID ${id} not found`);
     }
 
     // Check if the field is associated with any GrowingCropPeriods
-    if (field.growingCropPeriods && field.growingCropPeriods.length > 0) {
+    if (
+      existingField.growingCropPeriods &&
+      existingField.growingCropPeriods.length > 0
+    ) {
       throw new BadRequestException(
-        `This field ${field.name} has associated GrowingCropPeriods. Cannot update the farm.`,
+        `This field ${existingField.name} has associated GrowingCropPeriods. Cannot update the farm.`,
       );
     }
 
     if (updateFieldDto.soilId) {
       let newSoil = await this.soilService.findOne(updateFieldDto.soilId);
 
-      field.soil = newSoil;
+      existingField.soil = newSoil;
     }
 
     if (updateFieldDto.farmId) {
       let newFarm = await this.farmService.findOne(updateFieldDto.farmId);
 
-      field.farm = newFarm;
+      existingField.farm = newFarm;
     }
 
     if (updateFieldDto.name) {
-      field.name = updateFieldDto.name;
+      existingField.name = updateFieldDto.name;
     }
 
     if (updateFieldDto.boundary) {
-      field.boundary = updateFieldDto.boundary;
+      existingField.boundary = updateFieldDto.boundary;
     }
 
-    const updatedFieldSoilId = await this.fieldRepository.save(field);
+    const updatedField = await this.fieldRepository.save(existingField);
 
     // console.log("Updated Field:", updatedField);
-    return updatedFieldSoilId;
+    return updatedField;
   }
 
   async deleteFieldById(

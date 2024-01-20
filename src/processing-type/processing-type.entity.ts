@@ -14,7 +14,7 @@ export class ProcessingType {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column()
+  @Column({ unique: true, nullable: false })
   name: string;
 
   @OneToMany(() => Processing, (processing) => processing.processingType)

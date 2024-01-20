@@ -25,14 +25,14 @@ export class Field {
   @Column({ type: "jsonb", nullable: false })
   boundary: MultiPolygon | Polygon;
 
-  @ManyToOne(() => Farm, (farm) => farm.fields, { nullable: true })
+  @ManyToOne(() => Farm, (farm) => farm.fields, { nullable: false })
   @JoinColumn({ name: "farm_id" })
   farm: Farm;
 
   // If there is two-way connection between field and soil
   // soil_id is in filed table
   // but also from soil table can reach many fields
-  @ManyToOne(() => Soil, (soil) => soil.fields)
+  @ManyToOne(() => Soil, (soil) => soil.fields, { nullable: false })
   @JoinColumn({ name: "soil_id" })
   soil: Soil;
 

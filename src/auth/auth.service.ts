@@ -27,7 +27,7 @@ export class AuthService {
     const users = await this.usersService.find(user.email);
 
     if (users.length) {
-      throw new BadRequestException("Can't login!");
+      throw new BadRequestException("Registration Failed!");
     }
 
     try {

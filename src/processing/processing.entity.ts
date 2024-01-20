@@ -25,6 +25,7 @@ export class Processing {
   @ManyToOne(
     () => GrowingCropPeriod,
     (growingCropPeriod) => growingCropPeriod.processings,
+    { nullable: false },
   )
   @JoinColumn({ name: "growing_crop_period_id" })
   growingCropPeriod: GrowingCropPeriod;
@@ -32,11 +33,14 @@ export class Processing {
   @ManyToOne(
     () => ProcessingType,
     (processingType) => processingType.processings,
+    { nullable: false },
   )
   @JoinColumn({ name: "cultivation_type_id" })
   processingType: ProcessingType;
 
-  @ManyToOne(() => Machine, (machine) => machine.processings)
+  @ManyToOne(() => Machine, (machine) => machine.processings, {
+    nullable: false,
+  })
   @JoinColumn({ name: "machine_id" })
   machine: Machine;
 

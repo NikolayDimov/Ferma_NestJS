@@ -17,11 +17,13 @@ export class GrowingCropPeriod {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => Field, (field) => field.growingCropPeriods)
+  @ManyToOne(() => Field, (field) => field.growingCropPeriods, {
+    nullable: false,
+  })
   @JoinColumn({ name: "field_id" })
   field: Field;
 
-  @ManyToOne(() => Crop, (crop) => crop.growingCropPeriods)
+  @ManyToOne(() => Crop, (crop) => crop.growingCropPeriods, { nullable: false })
   @JoinColumn({ name: "crop_id" })
   crop: Crop;
 

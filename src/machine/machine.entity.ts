@@ -26,7 +26,7 @@ export class Machine {
   @Column({ name: "register_number" })
   registerNumber: string;
 
-  @ManyToOne(() => Farm, (farm) => farm.machines)
+  @ManyToOne(() => Farm, (farm) => farm.machines, { nullable: false })
   @JoinColumn({ name: "farm_id" })
   farm: Farm;
 

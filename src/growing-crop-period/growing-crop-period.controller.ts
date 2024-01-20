@@ -15,14 +15,14 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorator/roles.decorator";
 import { UserRole } from "../auth/dtos/role.enum";
 
-@Controller("growingCropPeriods")
+@Controller("growingCropPeriod")
 @UseGuards(RolesGuard)
 export class GrowingCropPeriodController {
   constructor(private growingCropPeriodService: GrowingCropPeriodService) {}
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("/createGrowingCropPeriod")
-  async createGrowingPeriod(
+  @Post("")
+  async createGrowingCropPeriod(
     @Body(ValidationPipe)
     createGrowingCropPeriodDto: CreateGrowingCropPeriodDto,
   ): Promise<GrowingCropPeriod> {
@@ -37,5 +37,18 @@ export class GrowingCropPeriodController {
     @Param("id", ParseUUIDPipe) id: string,
   ): Promise<{ id: string; message: string }> {
     return this.growingCropPeriodService.deleteGrowingCropPeriodById(id);
+  }
+
+  @Roles(UserRole.OWNER)
+  @Delete(":id/permanent")
+  async permanentlyDeleteGrowingCropPeriodForOwner(
+    @Param("id", ParseUUIDPipe) id: string,
+  ): Promise<{ id: string; message: string }> {
+    const userRole = UserRole.OWNER;
+
+    return this.growingCropPeriodService.permanentlyDeleteGrowingCropPeriodForOwner(
+      id,
+      userRole,
+    );
   }
 }

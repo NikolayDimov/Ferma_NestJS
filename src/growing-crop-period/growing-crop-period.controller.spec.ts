@@ -1,15 +1,17 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { GrowingPeriodController } from "./growing-crop-period.controller";
+import { GrowingCropPeriodController } from "./growing-crop-period.controller";
 
 describe("GrowingPeriodController", () => {
-  let controller: GrowingPeriodController;
+  let controller: GrowingCropPeriodController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [GrowingPeriodController],
+      controllers: [GrowingCropPeriodController],
     }).compile();
 
-    controller = module.get<GrowingPeriodController>(GrowingPeriodController);
+    controller = module.get<GrowingCropPeriodController>(
+      GrowingCropPeriodController,
+    );
   });
 
   it("should be defined", () => {

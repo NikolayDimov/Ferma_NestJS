@@ -113,7 +113,7 @@ export class CropService {
       existingCrop.growingCropPeriods.length > 0
     ) {
       throw new BadRequestException(
-        "This crop has associated growingCropPeriods. Cannot be soft deleted.",
+        `This crop ${existingCrop.name} has associated growingCropPeriods. Cannot be soft deleted.`,
       );
     }
 
@@ -145,7 +145,7 @@ export class CropService {
       existingCrop.growingCropPeriods.length > 0
     ) {
       throw new BadRequestException(
-        "This crop has associated growingCropPeriods. Cannot be soft deleted.",
+        `This crop ${existingCrop.name} has associated growingCropPeriods. Cannot be soft deleted.`,
       );
     }
 

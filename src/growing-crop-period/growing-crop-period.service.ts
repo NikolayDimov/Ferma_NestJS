@@ -9,6 +9,7 @@ import { GrowingCropPeriod } from "./growing-crop-period.entity";
 import { CreateGrowingCropPeriodDto } from "./dtos/create-growing-crop-period.dto";
 import { FieldService } from "../field/field.service";
 import { CropService } from "../crop/crop.service";
+import { UserRole } from "../auth/dtos/role.enum";
 
 @Injectable()
 export class GrowingCropPeriodService {
@@ -78,7 +79,7 @@ export class GrowingCropPeriodService {
     const existingGrowingPeriod =
       await this.growingCropPeriodRepository.findOne({
         where: { id },
-        relations: ["processing"],
+        relations: ["processings"],
       });
 
     if (!existingGrowingPeriod) {
@@ -90,7 +91,7 @@ export class GrowingCropPeriodService {
       existingGrowingPeriod.processings.length > 0
     ) {
       throw new BadRequestException(
-        "This machine has associated processing. Cannot be soft deleted.",
+        "This existingGrowingPeriod has associated processing. Cannot be soft deleted.",
       );
     }
 
@@ -100,6 +101,43 @@ export class GrowingCropPeriodService {
     return {
       id,
       message: `Successfully soft deleted Growing period with id ${id}`,
+    };
+  }
+
+  async permanentlyDeleteGrowingCropPeriodForOwner(
+    id: string,
+    userRole: UserRole,
+  ): Promise<{ id: string; message: string }> {
+    const existingGrowingPeriod =
+      await this.growingCropPeriodRepository.findOne({
+        where: { id },
+        relations: ["processings"],
+      });
+
+    if (!existingGrowingPeriod) {
+      throw new NotFoundException(`GrowingPeriod with id ${id} not found`);
+    }
+
+    if (
+      existingGrowingPeriod.processings &&
+      existingGrowingPeriod.processings.length > 0
+    ) {
+      throw new BadRequestException(
+        "This existingGrowingPeriod has associated processing. Cannot be soft deleted.",
+      );
+    }
+
+    // Check if the user has the necessary role (OWNER) to perform the permanent delete
+    if (userRole !== UserRole.OWNER) {
+      throw new NotFoundException("User does not have the required role");
+    }
+
+    // Perform the permanent delete
+    await this.growingCropPeriodRepository.remove(existingGrowingPeriod);
+
+    return {
+      id,
+      message: `Successfully permanently deleted growingCropPeriod with id ${id}`,
     };
   }
 }

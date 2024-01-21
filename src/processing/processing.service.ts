@@ -51,13 +51,13 @@ export class ProcessingService {
     if (!machine) {
       throw new BadRequestException(`There is no machine type`);
     }
-    // console.log(machine);
-    // console.log(growingPeriod);
+    console.log("machine:", machine);
+    console.log("growingPeriod:", growingCropPeriod);
     // console.log(cultivationType);
 
     if (machine.farm.id !== growingCropPeriod.field.farm.id) {
       throw new BadRequestException(
-        `There is no machine with register number ${machine.registerNumber} in current farm`,
+        `The machine ${machine.brand} ${machine.model} ${machine.registerNumber} not belong to farm ${growingCropPeriod.field.farm.name}`,
       );
     }
 
@@ -165,6 +165,7 @@ export class ProcessingService {
     if (updateProcessingDto.growingCropPeriodId) {
       const growingCropPeriodId = await this.growingCropPeriodService.findOne(
         updateProcessingDto.growingCropPeriodId,
+        { relations: ["field", "field.farm"] },
       );
       if (!growingCropPeriodId) {
         throw new BadRequestException("No growingCropPeriodId found");
@@ -199,7 +200,7 @@ export class ProcessingService {
 
       if (machinefarm !== gpFieldfarm) {
         throw new BadRequestException(
-          `Machine ${machineId.registerNumber} is not in the same farm as field ${existingProcessing.growingCropPeriod.field.name} is.`,
+          `Machine ${machineId.brand} ${machineId.model} ${machineId.registerNumber} is not in the same farm as field ${existingProcessing.growingCropPeriod.field.name} is.`,
         );
       }
 

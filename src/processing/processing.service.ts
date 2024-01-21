@@ -292,30 +292,30 @@ export class ProcessingService {
   }
 
   // Most common field soil type (texture) per farm
-  async getMostCommonFieldSoilTypePerFarm(): Promise<
-    {
-      farmName: string;
-      mostCommonSoilType: string;
-      soilName: string;
-      occurrences: number;
-    }[]
-  > {
-    const result = await this.processingRepository
-      .createQueryBuilder("processing")
-      .select("farm.name", "farmName")
-      .addSelect("field.soil", "mostCommonSoilType")
-      .addSelect("soil.name", "soilName")
-      .addSelect("CAST(COUNT(soil.id)AS INTEGER)", "occurrences")
-      .leftJoin("processing.growingCropPeriod", "growingCropPeriod")
-      .leftJoin("growingCropPeriod.field", "field")
-      .leftJoin("field.farm", "farm")
-      .leftJoin("field.soil", "soil")
-      .groupBy("farm.name, field.soil, soil.name")
-      .orderBy("occurrences", "DESC")
-      .getRawMany();
+  // async getMostCommonFieldSoilTypePerFarm(): Promise<
+  //   {
+  //     farmName: string;
+  //     mostCommonSoilType: string;
+  //     soilName: string;
+  //     occurrences: number;
+  //   }[]
+  // > {
+  //   const result = await this.processingRepository
+  //     .createQueryBuilder("processing")
+  //     .select("farm.name", "farmName")
+  //     .addSelect("field.soil", "mostCommonSoilType")
+  //     .addSelect("soil.name", "soilName")
+  //     .addSelect("CAST(COUNT(soil.id)AS INTEGER)", "occurrences")
+  //     .leftJoin("processing.growingCropPeriod", "growingCropPeriod")
+  //     .leftJoin("growingCropPeriod.field", "field")
+  //     .leftJoin("field.farm", "farm")
+  //     .leftJoin("field.soil", "soil")
+  //     .groupBy("farm.name, field.soil, soil.name")
+  //     .orderBy("occurrences", "DESC")
+  //     .getRawMany();
 
-    return result;
-  }
+  //   return result;
+  // }
 
   async generateProcessingReport(): Promise<ProcessingReportDTO[]> {
     const result: ProcessingReportDTO[] = await this.processingRepository

@@ -267,7 +267,13 @@ export class FieldService {
   }
 
   async getFieldsPerFarmAndCrop(): Promise<
-    { cropName: string; farmName: string; fieldCount: number }[]
+    {
+      cropId: string;
+      cropName: string;
+      farmId: string;
+      farmName: string;
+      fieldCount: number;
+    }[]
   > {
     const fieldsPerFarmAndCrop = await this.fieldRepository
       .createQueryBuilder("field")
@@ -276,7 +282,7 @@ export class FieldService {
         "farm.name AS farmName",
         "crop.id AS cropId",
         "crop.name AS cropName",
-        "COUNT(field.id) AS fieldCount",
+        "CAST(COUNT(field.id)AS INTEGER) AS fieldCount",
       ])
       .innerJoin(Farm, "farm", "field.farm_id = farm.id")
       .innerJoin(
@@ -286,8 +292,36 @@ export class FieldService {
       )
       .innerJoin(Crop, "crop", "crop.id = growingCropPeriod.crop_id")
       .groupBy("farm.id, crop.id")
+      .orderBy("fieldCount", "DESC")
       .getRawMany();
 
     return fieldsPerFarmAndCrop;
+  }
+
+  async getMostCommonSoilPerFarm(): Promise<
+    {
+      soilId: string;
+      soilName: string;
+      farmId: string;
+      farmName: string;
+      fieldCount: number;
+    }[]
+  > {
+    const fieldsPerFarmAndSoil = await this.fieldRepository
+      .createQueryBuilder("field")
+      .select([
+        "farm.id AS farm",
+        "farm.name AS farmName",
+        "soil.id AS soil",
+        "soil.name AS soilName",
+        "CAST(COUNT(field.id) AS INTEGER) AS soilTypeCount",
+      ])
+      .innerJoin("field.soil", "soil")
+      .innerJoin("field.farm", "farm")
+      .groupBy("farm.id, soil.id")
+      .orderBy("soilTypeCount", "DESC")
+      .getRawMany();
+
+    return fieldsPerFarmAndSoil;
   }
 }

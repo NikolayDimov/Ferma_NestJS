@@ -17,9 +17,9 @@ export class ReportController {
     return await this.reportService.generateFieldsPerFarmAndCropReport();
   }
 
-  @Get("/mostCommonSoilTypePerFarm")
-  async getMostCommonSoilTypePerFarm() {
-    return await this.reportService.getMostCommonSoilTypePerFarm();
+  @Get("/mostCommonSoilPerFarm")
+  async getMostCommonSoilPerFarm() {
+    return await this.reportService.getMostCommonSoilPerFarm();
   }
 
   @Get("/processingReport")

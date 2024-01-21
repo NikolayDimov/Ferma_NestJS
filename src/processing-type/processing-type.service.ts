@@ -17,7 +17,6 @@ export class ProcessingTypeService {
   constructor(
     @InjectRepository(ProcessingType)
     private processingTypeRepository: Repository<ProcessingType>,
-    //private ProcessingService: ProcessingService,
   ) {}
 
   async createProcessingType(
@@ -63,7 +62,6 @@ export class ProcessingTypeService {
     if (!processingType.length) {
       throw new NotFoundException("No processingType found");
     }
-
     return processingType;
   }
 
@@ -77,7 +75,6 @@ export class ProcessingTypeService {
     if (!processingType) {
       throw new NotFoundException(`ProcessingType with ID ${id} not found`);
     }
-
     return processingType;
   }
 

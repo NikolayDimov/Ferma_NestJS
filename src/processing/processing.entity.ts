@@ -18,7 +18,7 @@ export class Processing {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ type: "date" })
+  @Column({ type: "date", nullable: false })
   @IsDateString()
   date: Date;
 

@@ -142,11 +142,7 @@ export class MachineService {
 
     // Check if there are associated processing
     if (machine.processings && machine.processings.length > 0) {
-      // If there are associated processing, prevent changing the farmId
-      if (
-        updateMachineDto.farmId &&
-        updateMachineDto.farmId !== machine.farm.id
-      ) {
+      {
         throw new BadRequestException(
           "This machine has associated processing. Cannot update the farm.",
         );
@@ -195,7 +191,7 @@ export class MachineService {
 
     if (existingMachine.processings && existingMachine.processings.length > 0) {
       throw new BadRequestException(
-        "This machine has associated processing. Cannot be soft deleted.",
+        "This machine has associated processing. Cannot be transferred.",
       );
     }
 

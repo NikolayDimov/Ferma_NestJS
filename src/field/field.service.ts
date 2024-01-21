@@ -182,7 +182,7 @@ export class FieldService {
       existingField.farm = newFarm;
     }
 
-    if (updateFieldDto.name) {
+    if (updateFieldDto.name !== undefined) {
       existingField.name = updateFieldDto.name;
     }
 

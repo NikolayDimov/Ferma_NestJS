@@ -24,19 +24,18 @@ import { Machine } from "../machine/machine.entity";
 export class ProcessingController {
   constructor(private processingService: ProcessingService) {}
 
-  // Cteare Cultivation with growing_period, cultivation_type and machine. If there is no created Attributes - create new cultivation_type and machine. If there is a existing Attributes - select from existing cultivation_type and machine. Growing_period is UUID and always must be created
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("createProcessing")
+  @Post("")
   async createProcessing(@Body() createProcessingDto: CreateProcessingDto) {
     const createdProcessing =
       await this.processingService.createProcessing(createProcessingDto);
     return { data: createdProcessing };
   }
 
-  @Get("getAll")
+  @Get("")
   async getAllFields() {
     const transformedProcessing =
-      await this.processingService.findAllWithAttributes();
+      await this.processingService.findAllProcessings();
     return { data: transformedProcessing };
   }
 

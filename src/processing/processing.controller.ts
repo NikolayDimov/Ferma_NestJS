@@ -70,4 +70,24 @@ export class ProcessingController {
   }> {
     return this.processingService.deleteProcessingById(id);
   }
+
+  @Roles(UserRole.OWNER)
+  @Delete(":id/permanent")
+  async permanentlyDeleteProcessingForOwner(
+    @Param("id", ParseUUIDPipe) id: string,
+  ): Promise<{
+    id: string;
+    date: Date;
+    growingCropPeriod: GrowingCropPeriod[];
+    processingType: ProcessingType[];
+    machine: Machine[];
+    message: string;
+  }> {
+    const userRole = UserRole.OWNER;
+
+    return this.processingService.permanentlyDeleteProcessingForOwner(
+      id,
+      userRole,
+    );
+  }
 }

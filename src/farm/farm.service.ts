@@ -204,22 +204,22 @@ export class FarmService {
   }
 
   // Count of fields per farm and crop
-  async getFieldsPerFarmAndCrop(): Promise<
-    { farmName: string; cropName: string; fieldCount: number }[]
-  > {
-    const fieldsPerFarmAndCrop = await this.farmRepository
-      .createQueryBuilder("farm")
-      .leftJoin("farm.fields", "field")
-      .leftJoin("field.growingCropPeriods", "growingCropPeriod")
-      .leftJoin("growingPeriod.crop", "crop")
-      .select([
-        "farm.name AS farmName",
-        "crop.name AS cropName",
-        "CAST(COUNT(DISTINCT field.id)AS INTEGER) AS fieldCount",
-      ])
-      .groupBy("farm.name, crop.name")
-      .getRawMany();
+  // async getFieldsPerFarmAndCrop(): Promise<
+  //   { farmName: string; cropName: string; fieldCount: number }[]
+  // > {
+  //   const fieldsPerFarmAndCrop = await this.farmRepository
+  //     .createQueryBuilder("farm")
+  //     .leftJoin("farm.fields", "field")
+  //     .leftJoin("field.growingCropPeriods", "growingCropPeriod")
+  //     .leftJoin("growingCropPeriod.crop", "crop")
+  //     .select([
+  //       "farm.name AS farmName",
+  //       "crop.name AS cropName",
+  //       "CAST(COUNT(DISTINCT field.id)AS INTEGER) AS fieldCount",
+  //     ])
+  //     .groupBy("farm.name, crop.name")
+  //     .getRawMany();
 
-    return fieldsPerFarmAndCrop;
-  }
+  //   return fieldsPerFarmAndCrop;
+  // }
 }

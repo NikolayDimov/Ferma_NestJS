@@ -21,7 +21,7 @@ export class ReportService {
     { farmName: string; cropName: string; fieldCount: number }[]
   > {
     const fieldsPerFarmAndCrop =
-      await this.farmService.getFieldsPerFarmAndCrop();
+      await this.fieldService.getFieldsPerFarmAndCrop();
     return fieldsPerFarmAndCrop;
   }
 
@@ -37,9 +37,9 @@ export class ReportService {
     }));
   }
 
-  async generateCultivationReport(): Promise<ProcessingReportDTO[]> {
+  async generateProcessingReport(): Promise<ProcessingReportDTO[]> {
     try {
-      return await this.processingService.generateCultivationReport();
+      return await this.processingService.generateProcessingReport();
     } catch (error) {
       console.error("Error generating cultivation report:", error);
       throw new Error("Failed to generate cultivation report");

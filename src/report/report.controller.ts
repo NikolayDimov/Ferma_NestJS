@@ -12,7 +12,7 @@ export class ReportController {
     return await this.reportService.getFarmsWithMostMachines();
   }
 
-  @Get("/fieldCountPerFarmCrop")
+  @Get("/fieldCountPerFarmAndCrop")
   async generateFieldsPerFarmAndCropReport() {
     return await this.reportService.generateFieldsPerFarmAndCropReport();
   }
@@ -22,8 +22,8 @@ export class ReportController {
     return await this.reportService.getMostCommonSoilTypePerFarm();
   }
 
-  @Get("/cultivationReport")
-  async generateCultivationReport() {
-    return await this.reportService.generateCultivationReport();
+  @Get("/processingReport")
+  async generateProcessingReport() {
+    return await this.reportService.generateProcessingReport();
   }
 }

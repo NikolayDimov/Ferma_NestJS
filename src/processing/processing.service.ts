@@ -14,6 +14,7 @@ import { MachineService } from "../machine/machine.service";
 import { ProcessingType } from "../processing-type/processing-type.entity";
 import { GrowingCropPeriod } from "../growing-crop-period/growing-crop-period.entity";
 import { Machine } from "../machine/machine.entity";
+import { UserRole } from "../auth/dtos/role.enum";
 
 @Injectable()
 export class ProcessingService {
@@ -193,8 +194,6 @@ export class ProcessingService {
         throw new BadRequestException("No machineId found");
       }
 
-      console.log("newmachine:", machineId);
-
       const machinefarm = machineId.farm.id;
       const gpFieldfarm = existingProcessing.growingCropPeriod.field.farm.id;
 
@@ -211,64 +210,6 @@ export class ProcessingService {
       await this.processingRepository.save(existingProcessing);
     return updatedProcessing;
   }
-
-  // async updateProcessing(
-  //   id: string,
-  //   updateProcessingDto: UpdateProcessingDto,
-  // ): Promise<Processing> {
-  //   const existingProcessing = await this.processingRepository.findOne({
-  //     where: { id },
-  //     relations: [
-  //       "growingCropPeriod",
-  //       "growingCropPeriod.field",
-  //       "growingCropPeriod.field.farm",
-  //       "growingCropPeriod.crop",
-  //       "processingType",
-  //       "machine",
-  //       "machine.farm",
-  //     ],
-  //   });
-
-  //   if (updateProcessingDto.date) {
-  //     existingProcessing.date = updateProcessingDto.date;
-  //   }
-
-  //   if (updateProcessingDto.growingCropPeriodId) {
-  //     const growingCropPeriodId = await this.growingCropPeriodService.findOne(
-  //       updateProcessingDto.growingCropPeriodId,
-  //     );
-  //     if (!growingCropPeriodId) {
-  //       throw new BadRequestException("No growingCropPeriodId found");
-  //     }
-  //     existingProcessing.growingCropPeriod = growingCropPeriodId;
-  //   }
-
-  //   if (updateProcessingDto.processingTypeId) {
-  //     const processingTypeId = await this.processingTypeService.findOne(
-  //       updateProcessingDto.processingTypeId,
-  //     );
-  //     if (!processingTypeId) {
-  //       throw new BadRequestException("No processingTypeId found");
-  //     }
-  //     existingProcessing.processingType = processingTypeId;
-  //   }
-
-  //   if (updateProcessingDto.machineId) {
-  //     const machineId = await this.machineService.findOne(
-  //       updateProcessingDto.machineId,
-  //     );
-
-  //     if (!machineId) {
-  //       throw new BadRequestException("No machineId found");
-  //     }
-
-  //     existingProcessing.machine = machineId;
-  //   }
-
-  //   const updatedProcessing =
-  //     await this.processingRepository.save(existingProcessing);
-  //   return updatedProcessing;
-  // }
 
   async deleteProcessingById(id: string): Promise<{
     id: string;
@@ -293,16 +234,6 @@ export class ProcessingService {
       (existingProcessing.processingType ?? []) as ProcessingType[];
     const machine: Machine[] = (existingProcessing.machine ?? []) as Machine[];
 
-    if (
-      growingCropPeriod.length > 0 ||
-      processingType.length > 0 ||
-      machine.length > 0
-    ) {
-      throw new BadRequestException(
-        "This Processing has associated growingCropPeriod, ProcessingType, or machine. Cannot be soft deleted.",
-      );
-    }
-
     // Soft delete using the softDelete method
     await this.processingRepository.softDelete({ id });
 
@@ -313,6 +244,50 @@ export class ProcessingService {
       processingType,
       machine,
       message: `Successfully soft deleted Processing with id ${id}`,
+    };
+  }
+
+  async permanentlyDeleteProcessingForOwner(
+    id: string,
+    userRole: UserRole,
+  ): Promise<{
+    id: string;
+    date: Date;
+    growingCropPeriod: GrowingCropPeriod[];
+    processingType: ProcessingType[];
+    machine: Machine[];
+    message: string;
+  }> {
+    const existingProcessing = await this.processingRepository.findOne({
+      where: { id },
+      relations: ["growingCropPeriod", "processingType", "machine"],
+    });
+    // console.log("Found machine:", existingMachine);
+
+    if (!existingProcessing) {
+      throw new NotFoundException(`Processing with id ${id} not found`);
+    }
+
+    // Check if the user has the necessary role (OWNER) to perform the permanent delete
+    if (userRole !== UserRole.OWNER) {
+      throw new NotFoundException("User does not have the required role");
+    }
+    const growingCropPeriod: GrowingCropPeriod[] =
+      (existingProcessing.growingCropPeriod ?? []) as GrowingCropPeriod[];
+    const processingType: ProcessingType[] =
+      (existingProcessing.processingType ?? []) as ProcessingType[];
+    const machine: Machine[] = (existingProcessing.machine ?? []) as Machine[];
+
+    // Perform the permanent delete
+    await this.processingRepository.remove(existingProcessing);
+
+    return {
+      id,
+      date: existingProcessing.deleted || new Date(), // Use deleted instead of date
+      growingCropPeriod,
+      processingType,
+      machine,
+      message: `Successfully permanently deleted Processing with id ${id}`,
     };
   }
 
@@ -342,7 +317,7 @@ export class ProcessingService {
     return result;
   }
 
-  async generateCultivationReport(): Promise<ProcessingReportDTO[]> {
+  async generateProcessingReport(): Promise<ProcessingReportDTO[]> {
     const result: ProcessingReportDTO[] = await this.processingRepository
       .createQueryBuilder("processing")
       .select([

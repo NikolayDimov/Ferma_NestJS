@@ -14,6 +14,8 @@ import { SoilService } from "../soil/soil.service";
 import { FarmService } from "../farm/farm.service";
 import { CreateFieldDto } from "./dtos/create-field.dto";
 import { UpdateFieldDto } from "./dtos/update-field.dto";
+import { GrowingCropPeriod } from "../growing-crop-period/growing-crop-period.entity";
+import { Crop } from "../crop/crop.entity";
 
 @Injectable()
 export class FieldService {
@@ -262,5 +264,30 @@ export class FieldService {
       name: existingField.name,
       message: `Successfully permanently deleted Field with id ${id} and name ${existingField.name}`,
     };
+  }
+
+  async getFieldsPerFarmAndCrop(): Promise<
+    { cropName: string; farmName: string; fieldCount: number }[]
+  > {
+    const fieldsPerFarmAndCrop = await this.fieldRepository
+      .createQueryBuilder("field")
+      .select([
+        "farm.id AS farmId",
+        "farm.name AS farmName",
+        "crop.id AS cropId",
+        "crop.name AS cropName",
+        "COUNT(field.id) AS fieldCount",
+      ])
+      .innerJoin(Farm, "farm", "field.farm_id = farm.id")
+      .innerJoin(
+        GrowingCropPeriod,
+        "growingCropPeriod",
+        "field.id = growingCropPeriod.field_id",
+      )
+      .innerJoin(Crop, "crop", "crop.id = growingCropPeriod.crop_id")
+      .groupBy("farm.id, crop.id")
+      .getRawMany();
+
+    return fieldsPerFarmAndCrop;
   }
 }

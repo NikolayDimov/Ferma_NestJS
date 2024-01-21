@@ -179,7 +179,6 @@ export class MachineService {
 
   // Tarnsferring machine from one Farm to another
   async transferMachine(id: string, newFarmId: string): Promise<Machine> {
-    // Fetch the existing machine with associated data
     const existingMachine = await this.machineRepository.findOne({
       where: { id },
       relations: ["processings", "farm"],
@@ -204,7 +203,6 @@ export class MachineService {
 
     existingMachine.farm = newFarm;
 
-    // Save and return the updated machine
     return await this.machineRepository.save(existingMachine);
   }
 

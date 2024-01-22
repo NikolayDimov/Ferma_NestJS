@@ -16,7 +16,7 @@ export class User {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: false })
   email: string;
 
   @Column()
@@ -24,8 +24,8 @@ export class User {
 
   @Column({
     type: "enum",
-    enum: UserRole,
-    default: UserRole.VIEWER,
+    enum: UserRole, //[UserRole.OWNER, UserRole.OPERATOR, UserRole.VIEWER]
+    default: UserRole.VIEWER, //`'VIEWER'`
     enumName: "user_role",
   })
   role: UserRole;

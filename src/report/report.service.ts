@@ -35,8 +35,8 @@ export class ReportService {
     try {
       return await this.processingService.generateProcessingReport();
     } catch (error) {
-      console.error("Error generating cultivation report:", error);
-      throw new Error("Failed to generate cultivation report");
+      console.error("Error generating processing report:", error);
+      throw new Error("Failed to generate processing report");
     }
   }
 }

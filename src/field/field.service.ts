@@ -28,40 +28,29 @@ export class FieldService {
   async createField(createFieldDto: CreateFieldDto): Promise<Field> {
     const { name, boundary, soilId, farmId } = createFieldDto;
 
-    // Check if the field name is unique within the specific farm
     const existingField = await this.fieldRepository.findOne({
       withDeleted: true,
       where: { name, farm: { id: farmId } },
     });
 
     if (existingField) {
-      // If the field exists and is soft-deleted, restore it
       if (existingField.deleted) {
         existingField.deleted = null;
         return await this.fieldRepository.save(existingField);
       } else {
-        // Fetch the farm details
         const farm = await this.farmService.findOneById(farmId);
-
-        // Create a separate variable for the error message
         const errorMessage = `Field with name: '${name}' already exists in farm: '${farm ? farm.name : "Unknown farm"}'`;
-
-        // If the field is not soft-deleted, throw a conflict exception with the error message
         throw new ConflictException(errorMessage);
       }
     }
 
     let farm: Farm;
-
     const existingFieldInOtherFarms = await this.fieldRepository.findOne({
       withDeleted: true,
       where: { name },
     });
 
-    // Check if the soil exists
     const soil = await this.soilService.findOne(soilId);
-
-    // If the soil doesn't exist, create it
     if (!soil) {
       throw new BadRequestException(`No soil found`);
     }
@@ -71,7 +60,6 @@ export class FieldService {
       throw new BadRequestException(`No farm with ${farm.id}`);
     }
 
-    // Create the field and associate it with the soil
     const field = this.fieldRepository.create({
       name,
       boundary,
@@ -80,7 +68,6 @@ export class FieldService {
     });
 
     const createdField = await this.fieldRepository.save(field);
-    // Return the created field
     return createdField;
   }
 
@@ -255,14 +242,11 @@ export class FieldService {
     if (userRole !== UserRole.OWNER) {
       throw new NotFoundException("User does not have the required role");
     }
-
-    // Perform the permanent delete
     await this.fieldRepository.remove(existingField);
-
     return {
       id,
       name: existingField.name,
-      message: `Successfully permanently deleted Field with id ${id} and name ${existingField.name}`,
+      message: `Successfully permanently deleted Field with id ${id} and name ${existingField.name}`, // TODO - leave id only
     };
   }
 

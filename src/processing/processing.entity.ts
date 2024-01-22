@@ -35,7 +35,7 @@ export class Processing {
     (processingType) => processingType.processings,
     { nullable: false },
   )
-  @JoinColumn({ name: "cultivation_type_id" })
+  @JoinColumn({ name: "processing_type_id" })
   processingType: ProcessingType;
 
   @ManyToOne(() => Machine, (machine) => machine.processings, {

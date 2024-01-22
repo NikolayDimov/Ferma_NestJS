@@ -62,7 +62,6 @@ export class ProcessingService {
       );
     }
 
-    // Create the processing and associate it with the growingCropperiod, processingType and machine
     const processing = this.processingRepository.create({
       date,
       growingCropPeriod,
@@ -71,8 +70,6 @@ export class ProcessingService {
     });
 
     const createdProcessing = await this.processingRepository.save(processing);
-
-    // Return the created cultivation
     return createdProcessing;
   }
 

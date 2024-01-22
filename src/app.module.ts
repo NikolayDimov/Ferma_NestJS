@@ -1,7 +1,6 @@
 import { Module, ValidationPipe } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { UserModule } from "./user/user.module";
 import { APP_FILTER, APP_GUARD, APP_PIPE } from "@nestjs/core";
@@ -14,7 +13,7 @@ import { MachineModule } from "./machine/machine.module";
 import { CropModule } from "./crop/crop.module";
 import { HttpExceptionFilter } from "./filters/HttpExceptionFilter";
 import { ReportModule } from "./report/report.module";
-import { dataSourceOptions } from "db/data-source";
+//import { dataSourceOptions } from "db/data-source";
 import { Farm } from "./farm/farm.entity";
 import { User } from "./user/user.entity";
 import { Field } from "./field/field.entity";
@@ -73,7 +72,7 @@ dotenv.config();
     CropModule,
     ReportModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: AuthGuard },

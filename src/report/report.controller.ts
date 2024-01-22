@@ -7,22 +7,22 @@ import { AuthGuard } from "src/auth/guards/auth.guard";
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
-  @Get("/farmsWithMostMachines")
+  @Get("/farms-with-most-machines")
   async getFarmsWithMostMachines() {
     return await this.reportService.getFarmsWithMostMachines();
   }
 
-  @Get("/fieldCountPerFarmAndCrop")
+  @Get("/field-count-per-farm-and-crop")
   async generateFieldsPerFarmAndCropReport() {
     return await this.reportService.generateFieldsPerFarmAndCropReport();
   }
 
-  @Get("/mostCommonSoilPerFarm")
+  @Get("/most-common-soil-per-farm")
   async getMostCommonSoilPerFarm() {
     return await this.reportService.getMostCommonSoilPerFarm();
   }
 
-  @Get("/processingReport")
+  @Get("/processing-report")
   async generateProcessingReport() {
     return await this.reportService.generateProcessingReport();
   }

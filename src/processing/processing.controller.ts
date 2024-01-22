@@ -24,15 +24,7 @@ import { Machine } from "../machine/machine.entity";
 export class ProcessingController {
   constructor(private processingService: ProcessingService) {}
 
-  @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("")
-  async createProcessing(@Body() createProcessingDto: CreateProcessingDto) {
-    const createdProcessing =
-      await this.processingService.createProcessing(createProcessingDto);
-    return { data: createdProcessing };
-  }
-
-  @Get("")
+  @Get()
   async getAllFields() {
     const transformedProcessing =
       await this.processingService.findAllProcessings();
@@ -43,6 +35,14 @@ export class ProcessingController {
   async getProcessingById(@Param("id", ParseUUIDPipe) id: string) {
     const transformedField = await this.processingService.findById(id);
     return { data: transformedField };
+  }
+
+  @Roles(UserRole.OWNER, UserRole.OPERATOR)
+  @Post()
+  async createProcessing(@Body() createProcessingDto: CreateProcessingDto) {
+    const createdProcessing =
+      await this.processingService.createProcessing(createProcessingDto);
+    return { data: createdProcessing };
   }
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
@@ -83,11 +83,6 @@ export class ProcessingController {
     machine: Machine[];
     message: string;
   }> {
-    const userRole = UserRole.OWNER;
-
-    return this.processingService.permanentlyDeleteProcessingForOwner(
-      id,
-      userRole,
-    );
+    return this.processingService.permanentlyDeleteProcessingForOwner(id);
   }
 }

@@ -25,52 +25,6 @@ export class FieldService {
     private farmService: FarmService,
   ) {}
 
-  async createField(createFieldDto: CreateFieldDto): Promise<Field> {
-    const { name, boundary, soilId, farmId } = createFieldDto;
-
-    const existingField = await this.fieldRepository.findOne({
-      withDeleted: true,
-      where: { name, farm: { id: farmId } },
-    });
-
-    if (existingField) {
-      if (existingField.deleted) {
-        existingField.deleted = null;
-        return await this.fieldRepository.save(existingField);
-      } else {
-        const farm = await this.farmService.findOneById(farmId);
-        const errorMessage = `Field with name: '${name}' already exists in farm: '${farm ? farm.name : "Unknown farm"}'`;
-        throw new ConflictException(errorMessage);
-      }
-    }
-
-    let farm: Farm;
-    const existingFieldInOtherFarms = await this.fieldRepository.findOne({
-      withDeleted: true,
-      where: { name },
-    });
-
-    const soil = await this.soilService.findOne(soilId);
-    if (!soil) {
-      throw new BadRequestException(`No soil found`);
-    }
-
-    farm = await this.farmService.findOneById(farmId);
-    if (!farm) {
-      throw new BadRequestException(`No farm with ${farm.id}`);
-    }
-
-    const field = this.fieldRepository.create({
-      name,
-      boundary,
-      soil,
-      farm,
-    });
-
-    const createdField = await this.fieldRepository.save(field);
-    return createdField;
-  }
-
   // transformField and transformSoil -- use for findAllWithSoil and findById
   private transformField(field: Field): Field {
     return {
@@ -133,6 +87,52 @@ export class FieldService {
     }
 
     return this.transformField(field);
+  }
+
+  async createField(createFieldDto: CreateFieldDto): Promise<Field> {
+    const { name, boundary, soilId, farmId } = createFieldDto;
+
+    const existingField = await this.fieldRepository.findOne({
+      withDeleted: true,
+      where: { name, farm: { id: farmId } },
+    });
+
+    if (existingField) {
+      if (existingField.deleted) {
+        existingField.deleted = null;
+        return await this.fieldRepository.save(existingField);
+      } else {
+        const farm = await this.farmService.findOneById(farmId);
+        const errorMessage = `Field with name: '${name}' already exists in farm: '${farm ? farm.name : "Unknown farm"}'`;
+        throw new ConflictException(errorMessage);
+      }
+    }
+
+    let farm: Farm;
+    const existingFieldInOtherFarms = await this.fieldRepository.findOne({
+      withDeleted: true,
+      where: { name },
+    });
+
+    const soil = await this.soilService.findOne(soilId);
+    if (!soil) {
+      throw new BadRequestException(`No soil found`);
+    }
+
+    farm = await this.farmService.findOneById(farmId);
+    if (!farm) {
+      throw new BadRequestException(`No farm with ${farm.id}`);
+    }
+
+    const field = this.fieldRepository.create({
+      name,
+      boundary,
+      soil,
+      farm,
+    });
+
+    const createdField = await this.fieldRepository.save(field);
+    return createdField;
   }
 
   async updateField(
@@ -218,7 +218,6 @@ export class FieldService {
 
   async permanentlyDeleteFieldByIdForOwner(
     id: string,
-    userRole: UserRole,
   ): Promise<{ id: string; name: string; message: string }> {
     const existingField = await this.fieldRepository.findOne({
       where: { id },
@@ -236,11 +235,6 @@ export class FieldService {
       throw new BadRequestException(
         `This field ${existingField.name} has associated growingCropPeriods. Cannot be permanent deleted.`,
       );
-    }
-
-    // Check if the user has the necessary role (OWNER) to perform the permanent delete
-    if (userRole !== UserRole.OWNER) {
-      throw new NotFoundException("User does not have the required role");
     }
     await this.fieldRepository.remove(existingField);
     return {

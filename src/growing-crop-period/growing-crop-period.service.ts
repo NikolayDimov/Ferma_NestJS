@@ -20,6 +20,27 @@ export class GrowingCropPeriodService {
     private cropService: CropService,
   ) {}
 
+  async findOne(
+    id: string,
+    options?: { relations?: string[] },
+  ): Promise<GrowingCropPeriod> {
+    if (!id) {
+      return null;
+    }
+
+    return await this.growingCropPeriodRepository.findOne({
+      where: { id },
+      relations: options?.relations,
+    });
+  }
+
+  async findOneById(id: string): Promise<GrowingCropPeriod> {
+    const existingField = await this.growingCropPeriodRepository.findOne({
+      where: { id },
+    });
+    return existingField;
+  }
+
   async createGrowingCropPeriod(
     createGrowingCropPeriodDto?: Partial<CreateGrowingCropPeriodDto>,
   ): Promise<GrowingCropPeriod> {
@@ -49,27 +70,6 @@ export class GrowingCropPeriodService {
     });
 
     return this.growingCropPeriodRepository.save(growingPeriod);
-  }
-
-  async findOne(
-    id: string,
-    options?: { relations?: string[] },
-  ): Promise<GrowingCropPeriod> {
-    if (!id) {
-      return null;
-    }
-
-    return await this.growingCropPeriodRepository.findOne({
-      where: { id },
-      relations: options?.relations,
-    });
-  }
-
-  async findOneById(id: string): Promise<GrowingCropPeriod> {
-    const existingField = await this.growingCropPeriodRepository.findOne({
-      where: { id },
-    });
-    return existingField;
   }
 
   async deleteGrowingCropPeriodById(id: string): Promise<{
@@ -106,7 +106,6 @@ export class GrowingCropPeriodService {
 
   async permanentlyDeleteGrowingCropPeriodForOwner(
     id: string,
-    userRole: UserRole,
   ): Promise<{ id: string; message: string }> {
     const existingGrowingPeriod =
       await this.growingCropPeriodRepository.findOne({
@@ -125,11 +124,6 @@ export class GrowingCropPeriodService {
       throw new BadRequestException(
         "This existingGrowingPeriod has associated processing. Cannot be soft deleted.",
       );
-    }
-
-    // Check if the user has the necessary role (OWNER) to perform the permanent delete
-    if (userRole !== UserRole.OWNER) {
-      throw new NotFoundException("User does not have the required role");
     }
 
     // Perform the permanent delete

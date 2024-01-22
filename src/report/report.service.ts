@@ -10,7 +10,6 @@ export class ReportService {
     private readonly farmService: FarmService,
     private readonly processingService: ProcessingService,
     private readonly fieldService: FieldService,
-    private readonly growingCropPeriodService: GrowingCropPeriodService,
   ) {}
 
   async getFarmsWithMostMachines() {

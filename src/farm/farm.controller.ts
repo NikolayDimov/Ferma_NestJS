@@ -21,16 +21,7 @@ import { UpdateFarmDto } from "./dtos/update-farm.dto";
 export class FarmController {
   constructor(private farmService: FarmService) {}
 
-  @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("")
-  async createFarm(@Body() createFarmDto: CreateFarmDto) {
-    console.log("Received request payload:", createFarmDto);
-
-    const createdFarm = await this.farmService.createFarm(createFarmDto);
-    return { data: createdFarm };
-  }
-
-  @Get("")
+  @Get()
   async getAllFarms() {
     const transformedFarms = await this.farmService.findAllFarms();
     return { data: transformedFarms };
@@ -42,7 +33,14 @@ export class FarmController {
     return { data: transformedFarm };
   }
 
-  // Update Farm with CountryID
+  @Roles(UserRole.OWNER, UserRole.OPERATOR)
+  @Post()
+  async createFarm(@Body() createFarmDto: CreateFarmDto) {
+    //console.log("Received request payload:", createFarmDto);
+    const createdFarm = await this.farmService.createFarm(createFarmDto);
+    return { data: createdFarm };
+  }
+
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
   @Patch(":id")
   async updateFarm(
@@ -66,8 +64,6 @@ export class FarmController {
   async permanentlyDeletefarmByIdForOwner(
     @Param("id", ParseUUIDPipe) id: string,
   ): Promise<{ id: string; name: string; message: string }> {
-    const userRole = UserRole.OWNER;
-
-    return this.farmService.permanentlyDeletefarmByIdForOwner(id, userRole);
+    return this.farmService.permanentlyDeletefarmByIdForOwner(id);
   }
 }

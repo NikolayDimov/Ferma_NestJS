@@ -20,50 +20,6 @@ export class MachineService {
     private farmService: FarmService,
   ) {}
 
-  async createMachine(createMachineDto: CreateMachineDto): Promise<Machine> {
-    const errors = await validate(createMachineDto);
-    if (errors.length > 0) {
-      throw new BadRequestException(errors);
-    }
-
-    const { brand, model, registerNumber, farmId } = createMachineDto;
-
-    // Attempt to find the machine by brand, model and regNumber (including soft-deleted ones)
-    const existingMachine = await this.machineRepository.findOne({
-      withDeleted: true,
-      where: { brand, model, registerNumber },
-    });
-
-    if (existingMachine) {
-      // If the soil exists and is soft-deleted, restore it
-      if (existingMachine.deleted) {
-        existingMachine.deleted = null;
-        return await this.machineRepository.save(existingMachine);
-      } else {
-        // If the soil is not soft-deleted, throw a conflict exception
-        throw new ConflictException(
-          `Machine with ${registerNumber} already exists`,
-        );
-      }
-    }
-
-    const farm = await this.farmService.findOne(farmId);
-
-    if (!farm) {
-      throw new BadRequestException("No farm found");
-    }
-
-    const machine = this.machineRepository.create({
-      brand,
-      model,
-      registerNumber,
-      farm: farm,
-    });
-
-    const createdMachine = await this.machineRepository.save(machine);
-    return createdMachine;
-  }
-
   async findOneByName(
     brand: string,
     model: string,
@@ -128,6 +84,50 @@ export class MachineService {
     return machine;
   }
 
+  async createMachine(createMachineDto: CreateMachineDto): Promise<Machine> {
+    const errors = await validate(createMachineDto);
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
+    }
+
+    const { brand, model, registerNumber, farmId } = createMachineDto;
+
+    // Attempt to find the machine by brand, model and regNumber (including soft-deleted ones)
+    const existingMachine = await this.machineRepository.findOne({
+      withDeleted: true,
+      where: { registerNumber },
+    });
+
+    if (existingMachine) {
+      //If the machine exists and is soft-deleted, restore it
+      if (existingMachine.deleted) {
+        existingMachine.deleted = null;
+        return await this.machineRepository.save(existingMachine);
+      } else {
+        // If the machine is not soft-deleted, throw a conflict exception
+        throw new ConflictException(
+          `Machine with ${registerNumber} already exists`,
+        );
+      }
+    }
+
+    const farm = await this.farmService.findOne(farmId);
+
+    if (!farm) {
+      throw new BadRequestException("No farm found");
+    }
+
+    const machine = this.machineRepository.create({
+      brand,
+      model,
+      registerNumber,
+      farm: farm,
+    });
+
+    const createdMachine = await this.machineRepository.save(machine);
+    return createdMachine;
+  }
+
   // Update machine with Transfer machine guard to another farm, if machine participate in cultivation
   // Work, and also can update machine brand, model, reg number
   async updateMachine(
@@ -145,6 +145,18 @@ export class MachineService {
       {
         throw new BadRequestException(
           "This machine has associated processing. Cannot update the farm.",
+        );
+      }
+    }
+    if (machine) {
+      //If the machine exists and is soft-deleted, restore it
+      if (machine.deleted) {
+        machine.deleted = null;
+        return await this.machineRepository.save(machine);
+      } else {
+        // If the machine is not soft-deleted, throw a conflict exception
+        throw new ConflictException(
+          `Machine with ${machine.registerNumber} already exists`,
         );
       }
     }
@@ -173,7 +185,6 @@ export class MachineService {
       machine.farm = farm;
     }
 
-    // Save and return the updated machine
     return await this.machineRepository.save(machine);
   }
 
@@ -240,10 +251,7 @@ export class MachineService {
     };
   }
 
-  async permanentlyDeleteMachineByIdForOwner(
-    id: string,
-    userRole: UserRole,
-  ): Promise<{
+  async permanentlyDeleteMachineByIdForOwner(id: string): Promise<{
     id: string;
     brand: string;
     model: string;
@@ -260,10 +268,6 @@ export class MachineService {
       throw new NotFoundException(`Machine with id ${id} not found`);
     }
 
-    // Check if the user has the necessary role (OWNER) to perform the permanent delete
-    if (userRole !== UserRole.OWNER) {
-      throw new NotFoundException("User does not have the required role");
-    }
     // Check if there are associated processing
     if (existingMachine.processings && existingMachine.processings.length > 0) {
       throw new BadRequestException(

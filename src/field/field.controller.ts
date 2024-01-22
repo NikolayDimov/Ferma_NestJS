@@ -22,14 +22,7 @@ import { UpdateFieldDto } from "./dtos/update-field.dto";
 export class FieldController {
   constructor(private fieldService: FieldService) {}
 
-  @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("")
-  async createFieldWithSoilId(@Body() createFieldDto: CreateFieldDto) {
-    const createdField = await this.fieldService.createField(createFieldDto);
-    return { data: createdField };
-  }
-
-  @Get("")
+  @Get()
   async getAllFields() {
     const transformedFields = await this.fieldService.findAllFields();
     return { data: transformedFields };
@@ -42,7 +35,14 @@ export class FieldController {
   }
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Patch(":id")
+  @Post()
+  async createFieldWithSoilId(@Body() createFieldDto: CreateFieldDto) {
+    const createdField = await this.fieldService.createField(createFieldDto);
+    return { data: createdField };
+  }
+
+  @Roles(UserRole.OWNER, UserRole.OPERATOR)
+  @Patch("/:id")
   async updateField(
     @Param("id", ParseUUIDPipe) id: string,
     @Body() updateFieldDto: UpdateFieldDto,
@@ -67,8 +67,6 @@ export class FieldController {
   async permanentlyDeleteFieldByIdForOwner(
     @Param("id", ParseUUIDPipe) id: string,
   ): Promise<{ id: string; name: string; message: string }> {
-    const userRole = UserRole.OWNER;
-
-    return this.fieldService.permanentlyDeleteFieldByIdForOwner(id, userRole);
+    return this.fieldService.permanentlyDeleteFieldByIdForOwner(id);
   }
 }

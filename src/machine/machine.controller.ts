@@ -23,13 +23,7 @@ import { Machine } from "./machine.entity";
 export class MachineController {
   constructor(private machineService: MachineService) {}
 
-  @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("")
-  async createMachine(@Body() createMachineDto: CreateMachineDto) {
-    return this.machineService.createMachine(createMachineDto);
-  }
-
-  @Get("")
+  @Get()
   async getAllMachines() {
     const machines = await this.machineService.findAll();
     return { data: machines };
@@ -43,6 +37,12 @@ export class MachineController {
     }
 
     return { data: machine };
+  }
+
+  @Roles(UserRole.OWNER, UserRole.OPERATOR)
+  @Post()
+  async createMachine(@Body() createMachineDto: CreateMachineDto) {
+    return this.machineService.createMachine(createMachineDto);
   }
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
@@ -86,12 +86,7 @@ export class MachineController {
     registerNumber: string;
     message: string;
   }> {
-    const userRole = UserRole.OWNER;
-
-    return this.machineService.permanentlyDeleteMachineByIdForOwner(
-      id,
-      userRole,
-    );
+    return this.machineService.permanentlyDeleteMachineByIdForOwner(id);
   }
 }
 

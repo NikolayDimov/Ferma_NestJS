@@ -19,40 +19,6 @@ export class ProcessingTypeService {
     private processingTypeRepository: Repository<ProcessingType>,
   ) {}
 
-  async createProcessingType(
-    createProcessingTypeDto: CreateProcessingTypeDto,
-  ): Promise<ProcessingType> {
-    const errors = await validate(createProcessingTypeDto);
-
-    if (errors.length > 0) {
-      throw new BadRequestException(errors);
-    }
-
-    const { name } = createProcessingTypeDto;
-
-    // Attempt to find the processingType by name (including soft-deleted ones)
-    const existingProcessingType = await this.processingTypeRepository.findOne({
-      withDeleted: true,
-      where: { name },
-    });
-
-    if (existingProcessingType) {
-      // If the processingType exists and is soft-deleted, restore it
-      if (existingProcessingType.deleted) {
-        existingProcessingType.deleted = null;
-        return await this.processingTypeRepository.save(existingProcessingType);
-      } else {
-        // If the processingType is not soft-deleted, throw a conflict exception
-        throw new ConflictException(`Processing Type ${name} already exists`);
-      }
-    }
-
-    const newProcessingType = this.processingTypeRepository.create({
-      name,
-    });
-    return await this.processingTypeRepository.save(newProcessingType);
-  }
-
   async findAll(): Promise<ProcessingType[]> {
     const processingType = await this.processingTypeRepository
       .createQueryBuilder("processingType")
@@ -98,6 +64,40 @@ export class ProcessingTypeService {
       where: { id },
       relations: options?.relations,
     });
+  }
+
+  async createProcessingType(
+    createProcessingTypeDto: CreateProcessingTypeDto,
+  ): Promise<ProcessingType> {
+    const errors = await validate(createProcessingTypeDto);
+
+    if (errors.length > 0) {
+      throw new BadRequestException(errors);
+    }
+
+    const { name } = createProcessingTypeDto;
+
+    // Attempt to find the processingType by name (including soft-deleted ones)
+    const existingProcessingType = await this.processingTypeRepository.findOne({
+      withDeleted: true,
+      where: { name },
+    });
+
+    if (existingProcessingType) {
+      // If the processingType exists and is soft-deleted, restore it
+      if (existingProcessingType.deleted) {
+        existingProcessingType.deleted = null;
+        return await this.processingTypeRepository.save(existingProcessingType);
+      } else {
+        // If the processingType is not soft-deleted, throw a conflict exception
+        throw new ConflictException(`Processing Type ${name} already exists`);
+      }
+    }
+
+    const newProcessingType = this.processingTypeRepository.create({
+      name,
+    });
+    return await this.processingTypeRepository.save(newProcessingType);
   }
 
   // Better not update Processing-type
@@ -165,7 +165,6 @@ export class ProcessingTypeService {
 
   async permanentlyDeleteProcessingTypeForOwner(
     id: string,
-    userRole: UserRole,
   ): Promise<{ id: string; name: string; message: string }> {
     const existingProcessingType = await this.processingTypeRepository.findOne({
       where: { id },
@@ -183,11 +182,6 @@ export class ProcessingTypeService {
       throw new BadRequestException(
         `This Processing Type ${existingProcessingType.name} has associated Processings. Cannot be permanent deleted.`,
       );
-    }
-
-    // Check if the user has the necessary role (OWNER) to perform the permanent delete
-    if (userRole !== UserRole.OWNER) {
-      throw new NotFoundException("User does not have the required role");
     }
 
     // Perform the permanent delete

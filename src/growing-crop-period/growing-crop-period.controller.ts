@@ -21,7 +21,7 @@ export class GrowingCropPeriodController {
   constructor(private growingCropPeriodService: GrowingCropPeriodService) {}
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("")
+  @Post()
   async createGrowingCropPeriod(
     @Body(ValidationPipe)
     createGrowingCropPeriodDto: CreateGrowingCropPeriodDto,
@@ -44,11 +44,8 @@ export class GrowingCropPeriodController {
   async permanentlyDeleteGrowingCropPeriodForOwner(
     @Param("id", ParseUUIDPipe) id: string,
   ): Promise<{ id: string; message: string }> {
-    const userRole = UserRole.OWNER;
-
     return this.growingCropPeriodService.permanentlyDeleteGrowingCropPeriodForOwner(
       id,
-      userRole,
     );
   }
 }

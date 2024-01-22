@@ -26,53 +26,6 @@ export class ProcessingService {
     private machineService: MachineService,
   ) {}
 
-  async createProcessing(
-    createProcessingDto: CreateProcessingDto,
-  ): Promise<Processing> {
-    const { date, processingTypeId, machineId, growingCropPeriodId } =
-      createProcessingDto;
-
-    const growingCropPeriod = await this.growingCropPeriodService.findOne(
-      growingCropPeriodId,
-      { relations: ["field", "field.farm"] },
-    );
-    if (!growingCropPeriod) {
-      throw new BadRequestException(`There is no growingCropPeriod`);
-    }
-
-    const processingType =
-      await this.processingTypeService.findOne(processingTypeId);
-    if (!processingTypeId) {
-      throw new BadRequestException(`There is no processingType`);
-    }
-
-    const machine = await this.machineService.findOne(machineId, {
-      relations: ["farm"],
-    });
-    if (!machine) {
-      throw new BadRequestException(`There is no machine type`);
-    }
-    console.log("machine:", machine);
-    console.log("growingPeriod:", growingCropPeriod);
-    // console.log(cultivationType);
-
-    if (machine.farm.id !== growingCropPeriod.field.farm.id) {
-      throw new BadRequestException(
-        `The machine ${machine.brand} ${machine.model} ${machine.registerNumber} not belong to farm ${growingCropPeriod.field.farm.name}`,
-      );
-    }
-
-    const processing = this.processingRepository.create({
-      date,
-      growingCropPeriod,
-      processingType,
-      machine,
-    });
-
-    const createdProcessing = await this.processingRepository.save(processing);
-    return createdProcessing;
-  }
-
   async findOne(
     id: string,
     options?: { relations?: string[] },
@@ -133,6 +86,53 @@ export class ProcessingService {
       throw new NotFoundException(`Processing with ID ${id} not found`);
     }
     return this.transformProcessing(processing);
+  }
+
+  async createProcessing(
+    createProcessingDto: CreateProcessingDto,
+  ): Promise<Processing> {
+    const { date, processingTypeId, machineId, growingCropPeriodId } =
+      createProcessingDto;
+
+    const growingCropPeriod = await this.growingCropPeriodService.findOne(
+      growingCropPeriodId,
+      { relations: ["field", "field.farm"] },
+    );
+    if (!growingCropPeriod) {
+      throw new BadRequestException(`There is no growingCropPeriod`);
+    }
+
+    const processingType =
+      await this.processingTypeService.findOne(processingTypeId);
+    if (!processingTypeId) {
+      throw new BadRequestException(`There is no processingType`);
+    }
+
+    const machine = await this.machineService.findOne(machineId, {
+      relations: ["farm"],
+    });
+    if (!machine) {
+      throw new BadRequestException(`There is no machine type`);
+    }
+    console.log("machine:", machine);
+    console.log("growingPeriod:", growingCropPeriod);
+    // console.log(cultivationType);
+
+    if (machine.farm.id !== growingCropPeriod.field.farm.id) {
+      throw new BadRequestException(
+        `The machine ${machine.brand} ${machine.model} ${machine.registerNumber} not belong to farm ${growingCropPeriod.field.farm.name}`,
+      );
+    }
+
+    const processing = this.processingRepository.create({
+      date,
+      growingCropPeriod,
+      processingType,
+      machine,
+    });
+
+    const createdProcessing = await this.processingRepository.save(processing);
+    return createdProcessing;
   }
 
   async updateProcessing(
@@ -244,10 +244,7 @@ export class ProcessingService {
     };
   }
 
-  async permanentlyDeleteProcessingForOwner(
-    id: string,
-    userRole: UserRole,
-  ): Promise<{
+  async permanentlyDeleteProcessingForOwner(id: string): Promise<{
     id: string;
     date: Date;
     growingCropPeriod: GrowingCropPeriod[];
@@ -265,10 +262,6 @@ export class ProcessingService {
       throw new NotFoundException(`Processing with id ${id} not found`);
     }
 
-    // Check if the user has the necessary role (OWNER) to perform the permanent delete
-    if (userRole !== UserRole.OWNER) {
-      throw new NotFoundException("User does not have the required role");
-    }
     const growingCropPeriod: GrowingCropPeriod[] =
       (existingProcessing.growingCropPeriod ?? []) as GrowingCropPeriod[];
     const processingType: ProcessingType[] =

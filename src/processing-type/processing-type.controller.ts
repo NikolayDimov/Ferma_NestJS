@@ -21,17 +21,7 @@ import { UpdateProcessingTypeDto } from "./dtos/update-prcessing-type.dto";
 export class ProcessingTypeController {
   constructor(private processingTypeService: ProcessingTypeService) {}
 
-  @Roles(UserRole.OWNER, UserRole.OPERATOR)
-  @Post("")
-  async createProcessing(
-    @Body() createProcessingTypeDto: CreateProcessingTypeDto,
-  ) {
-    return this.processingTypeService.createProcessingType(
-      createProcessingTypeDto,
-    );
-  }
-
-  @Get("")
+  @Get()
   async getAllProcessingType() {
     return this.processingTypeService.findAll();
   }
@@ -39,6 +29,16 @@ export class ProcessingTypeController {
   @Get(":id")
   async getCropById(@Param("id", ParseUUIDPipe) id: string) {
     return this.processingTypeService.findById(id);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.OPERATOR)
+  @Post()
+  async createProcessing(
+    @Body() createProcessingTypeDto: CreateProcessingTypeDto,
+  ) {
+    return this.processingTypeService.createProcessingType(
+      createProcessingTypeDto,
+    );
   }
 
   @Roles(UserRole.OWNER, UserRole.OPERATOR)
@@ -70,11 +70,8 @@ export class ProcessingTypeController {
   async permanentlyDeleteProcessingTypeForOwner(
     @Param("id", ParseUUIDPipe) id: string,
   ): Promise<{ id: string; name: string; message: string }> {
-    const userRole = UserRole.OWNER;
-
     return this.processingTypeService.permanentlyDeleteProcessingTypeForOwner(
       id,
-      userRole,
     );
   }
 }

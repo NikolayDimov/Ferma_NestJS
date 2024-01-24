@@ -11,7 +11,7 @@ export class UserResponseDto {
   role: UserRole;
 
   @ApiProperty()
-  id: string; // Change the type to string
+  id: string;
 
   @ApiProperty()
   created: Date;

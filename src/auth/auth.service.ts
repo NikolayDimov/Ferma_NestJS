@@ -15,6 +15,7 @@ import { SignInDto } from "./dtos/signIn.dto";
 import { User } from "../user/user.entity";
 import { UpdateUserRoleDto } from "./dtos/update-user-role.dto";
 import { UserResponseDto } from "./dtos/user-response.dto";
+import { UserRespDto } from "./dtos/user-resp.enum";
 
 @Injectable()
 export class AuthService {
@@ -48,7 +49,23 @@ export class AuthService {
         user.role,
       );
 
-      return userToCreate;
+      const payload = {
+        sub: userToCreate.id,
+        email: userToCreate.email,
+        role: userToCreate.role,
+      };
+
+      const access_token = await this.jwtService.signAsync(payload);
+
+      return {
+        id: userToCreate.id,
+        email: userToCreate.email,
+        role: userToCreate.role,
+        access_token,
+        created: new Date(),
+        updated: new Date(),
+        deleted: new Date(),
+      } as UserResponseDto;
     } catch (error) {
       throw new BadRequestException("Email is already use!");
     }

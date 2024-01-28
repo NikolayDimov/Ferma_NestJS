@@ -14,9 +14,8 @@ import { NestExpressApplication } from "@nestjs/platform-express";
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Enable CORS for all routes
   app.enableCors({
-    origin: "http://localhost:5173", // Replace with your React app's URL
+    origin: "http://localhost:5173",
     credentials: true,
   });
 
